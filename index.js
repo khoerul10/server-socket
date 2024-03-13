@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require('fs').promises;
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -7,9 +8,9 @@ const https = require('https');
 const socketIO = require('socket.io');
 
 const app = express();
-const port = process.env.PORT || 4000;
-const notificationSecret = 'NOTIFICATION_SECRET';
-const notificationKey = 'NOTIFICATION_KEY';
+const port = process.env.PORT || 2000;
+const notificationSecret = process.env.NOTIFICATION_SECRET || 'NOTIFICATION_SECRET';
+const notificationKey = process.env.NOTIFICATION_KEY || 'NOTIFICATION_KEY';
 const EVENTS = {
     newNotification: 'NEW_NOTIFICATION'
 };
