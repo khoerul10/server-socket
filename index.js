@@ -8,7 +8,10 @@ const https = require('https');
 const socketIO = require('socket.io');
 
 const app = express();
-const port = process.env.PORT || 2000;
+const hostname = process.env.HOSTNAME || 'localhost';
+const port = process.env.PORT || 40;
+const baseUrl = process.env.BASEURL;
+
 const notificationSecret = process.env.NOTIFICATION_SECRET || 'NOTIFICATION_SECRET';
 const notificationKey = process.env.NOTIFICATION_KEY || 'NOTIFICATION_KEY';
 const EVENTS = {
@@ -38,14 +41,14 @@ const io = socketIO(server, {
     }
 });
 
-server.listen(port, () => console.log('New Server listening at port', port));
+server.listen(port, hostname, () => console.log('New Server listening at port', port));
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/public'));
+app.use(baseUrl, cors());
+app.use(baseUrl, bodyParser.json());
+app.use(baseUrl, bodyParser.urlencoded({ extended: true }));
+app.use(baseUrl, express.static(__dirname + '/public'));
 
-app.post('/send', (req, res) => {
+app.post(`${baseUrl}/send`, (req, res) => {
     const data = req.body;
 
     if (!req.headers || req.headers.notification_secret !== notificationSecret) {
