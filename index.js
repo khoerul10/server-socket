@@ -32,7 +32,7 @@ const server = (serverOptions.key && serverOptions.cert)
 
 const io = socketIO(server, {
     cors: {
-        origin: ['http://localhost:3000'],
+        origin: '*',
         methods: ['GET', 'POST'],
         credentials: true
     }
