@@ -8,9 +8,7 @@ const https = require('https');
 const socketIO = require('socket.io');
 
 const app = express();
-const hostname = process.env.HOSTNAME || 'localhost';
 const port = process.env.PORT || 40;
-const baseUrl = process.env.BASEURL;
 
 const notificationSecret = process.env.NOTIFICATION_SECRET || 'NOTIFICATION_SECRET';
 const notificationKey = process.env.NOTIFICATION_KEY || 'NOTIFICATION_KEY';
@@ -34,26 +32,25 @@ const server = (serverOptions.key && serverOptions.cert)
     : http.createServer(app);
 
 const io = socketIO(server, {
+    // path: '/ws/dashboard/connect',
     cors: {
-        origin: '*',
-        methods: ['GET', 'POST'],
-        credentials: true
+        origin: '*'
     }
 });
 
-server.listen(port, hostname, () => console.log('New Server listening at port', port));
+server.listen(port, () => console.log('Server listening at port', port));
 
-app.use(baseUrl, cors());
-app.use(baseUrl, bodyParser.json());
-app.use(baseUrl, bodyParser.urlencoded({ extended: true }));
-app.use(baseUrl, express.static(__dirname + '/public'));
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post(`${baseUrl}/send`, (req, res) => {
+// app.post(`/ws/dashboard/send`, (req, res) => {
+app.post(`/send`, (req, res) => {
     const data = req.body;
 
     if (!req.headers || req.headers.notification_secret !== notificationSecret) {
-        return res.status(401).json('invalid notification secret');
-    }
+        return res.status(401).json({ code: 401, message: 'Invalid notification secret' });
+    }   
 
     if (data && data.notification && data.channel) {
         const dispatch = (channel, notification) => {
@@ -66,11 +63,11 @@ app.post(`${baseUrl}/send`, (req, res) => {
             dispatch(data.channel, data.notification);
         }
 
-        console.log('Notification:', data.notification, 'to channels:', data.channel);
-        return res.status(200).json('ok');
+        console.log('Notification:', data.notification, 'sent to channels:', data.channel);
+        return res.status(200).json({ code: 200, message: 'Notification sent successfully' });
     }
 
-    return res.status(406).json('Missing parameters');
+    return res.status(400).json({ code: 400, message: 'Missing parameters' });
 });
 
 io.on('connection', (socket) => {
