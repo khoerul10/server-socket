@@ -32,7 +32,7 @@ const server = (serverOptions.key && serverOptions.cert)
     : http.createServer(app);
 
 const io = socketIO(server, {
-    // path: '/ws/dashboard/connect',
+    path: `${process.env.PATH_CONNECT}`,
     cors: {
         origin: '*'
     }
@@ -45,7 +45,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // app.post(`/ws/dashboard/send`, (req, res) => {
-app.post(`/send`, (req, res) => {
+app.post(`${process.env.PATH_POST}/send`, (req, res) => {
     const data = req.body;
 
     if (!req.headers || req.headers.notification_secret !== notificationSecret) {
@@ -70,21 +70,52 @@ app.post(`/send`, (req, res) => {
     return res.status(400).json({ code: 400, message: 'Missing parameters' });
 });
 
+// io.on('connection', (socket) => {
+//     const { query } = socket.handshake;
+
+//     if (!validateConnection(query)) {
+//         return;
+//     }
+
+//     socket.on('join', (channel) => {
+//         socket.join(channel);
+//     });
+
+//     socket.on('leave', (channel) => {
+//         socket.leave(channel);
+//     });
+// });
+
 io.on('connection', (socket) => {
     const { query } = socket.handshake;
 
-    if (!validateConnection(query)) {
+    try {
+        if (!validateConnection(query)) {
+            return;
+        }
+    } catch (err) {
+        console.error('Error validating connection:', err);
+        socket.disconnect(true);
         return;
     }
 
     socket.on('join', (channel) => {
-        socket.join(channel);
+        try {
+            socket.join(channel);
+        } catch (err) {
+            console.error('Error joining channel:', err);
+        }
     });
 
     socket.on('leave', (channel) => {
-        socket.leave(channel);
+        try {
+            socket.leave(channel);
+        } catch (err) {
+            console.error('Error leaving channel:', err);
+        }
     });
 });
+
 
 function validateConnection(query) {
     return query.notificationKey === notificationKey;
